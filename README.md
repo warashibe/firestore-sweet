@@ -154,7 +154,8 @@ You can also get document `id` and `snapshot` with the actual data by adding `K`
 
 ```javascript
 // getK returns document id and data
-for(const id in await db.getK("users")){
+const users = await db.getK("users")
+for(const id in users){
   console.log(`${users[id].name} : ${users[id].age}`)
 }
 
