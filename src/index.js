@@ -2,6 +2,7 @@ import R from "ramdam"
 
 export default _db => {
   const db = _db()
+
   const _ref = args => {
     let n = 0
     const ref = R.addIndex(R.reduce)((acc, arg, i) => {
@@ -40,59 +41,51 @@ export default _db => {
 
   const _one = ss => (ss.exists ? ss.data() : null)
 
-  const _getData = ({ ss, n }) => {
-    if (R.isOdd(n)) {
-      let docs = []
-      ss.forEach(doc => {
-        docs.push(doc.data())
-      })
-      return docs
-    } else {
-      return _one(ss)
-    }
-  }
-
-  const _getDataR = ({ ss, n }) => {
-    if (R.isOdd(n)) {
-      let docs = []
-      ss.forEach(doc => {
-        docs.push(doc)
-      })
-      return docs
-    } else {
-      return ss
-    }
-  }
-
-  const _getDataK = ({ ss, n }) => {
-    if (R.isOdd(n)) {
-      let docs = {}
-      ss.forEach(doc => {
-        docs[doc.id] = doc.data()
-      })
-      return docs
-    } else {
-      return _one(ss)
-    }
-  }
-
-  const _getDataS = ({ ss, n }) => {
-    if (R.isOdd(n)) {
-      let docs = []
-      ss.forEach(doc => {
-        docs.push({ id: doc.id, data: doc.data(), ss: doc })
-      })
-      return docs
-    } else {
-      return ss.exists ? { id: ss.id, data: ss.data(), ss: ss } : null
-    }
-  }
-
   const _data = {
-    d: _getData,
-    r: _getDataR,
-    s: _getDataS,
-    k: _getDataK
+    d: ({ ss, n }) => {
+      if (R.isOdd(n)) {
+        let docs = []
+        ss.forEach(doc => {
+          docs.push(doc.data())
+        })
+        return docs
+      } else {
+        return _one(ss)
+      }
+    },
+    r: ({ ss, n }) => {
+      if (R.isOdd(n)) {
+        let docs = []
+        ss.forEach(doc => {
+          docs.push(doc)
+        })
+        return docs
+      } else {
+        return ss
+      }
+    },
+    s: ({ ss, n }) => {
+      if (R.isOdd(n)) {
+        let docs = []
+        ss.forEach(doc => {
+          docs.push({ id: doc.id, data: doc.data(), ss: doc })
+        })
+        return docs
+      } else {
+        return ss.exists ? { id: ss.id, data: ss.data(), ss: ss } : null
+      }
+    },
+    k: ({ ss, n }) => {
+      if (R.isOdd(n)) {
+        let docs = {}
+        ss.forEach(doc => {
+          docs[doc.id] = doc.data()
+        })
+        return docs
+      } else {
+        return _one(ss)
+      }
+    }
   }
 
   const _on = args => {
@@ -101,26 +94,25 @@ export default _db => {
     return { func, n, ref }
   }
 
-  const _op = (op, args, opt) => {
-    const { data, ref } = _write(args)
-    return R.isNil(opt) ? ref[op](data) : ref[op](data, opt)
-  }
+  const _ops = R.map(R.curry, {
+    write: (op, opt, args) => {
+      const { data, ref } = _write(args)
+      return R.isNil(opt) ? ref[op](data) : ref[op](data, opt)
+    },
+    get: async (getter, args) => _data[getter](await _get(args)),
+    on: async (getter, args) => {
+      const { func, n, ref } = _on(args)
+      return ref.onSnapshot(ss => func(_data[getter]({ n, ss })))
+    },
+    tx: async (getter, args) => {
+      const { func, n, ref } = _on(args)
+      return await db.runTransaction(async t =>
+        func({ t, data: _data[getter]({ n, ss: await t.get(ref) }), ref })
+      )
+    }
+  })
 
-  const _getter = async (getter, args) => _data[getter](await _get(args))
-
-  const _onSS = (getter, args) => {
-    const { func, n, ref } = _on(args)
-    return ref.onSnapshot(ss => func(_data[getter]({ n, ss })))
-  }
-
-  const _tx = async (getter, args) => {
-    const { func, n, ref } = _on(args)
-    return await db.runTransaction(async t =>
-      func({ t, data: _data[getter]({ n, ss: await t.get(ref) }), ref })
-    )
-  }
-
-  return {
+  const APIs = {
     inc: _db.FieldValue.increment,
 
     del: _db.FieldValue.delete(),
@@ -145,38 +137,30 @@ export default _db => {
       return batch.commit()
     },
 
-    tx: (...args) => _tx("d", args),
-
-    txR: (...args) => _tx("r", args),
-
-    txK: (...args) => _tx("k", args),
-
-    txS: (...args) => _tx("s", args),
-
-    on: (...args) => _onSS("d", args),
-
-    onR: (...args) => _onSS("r", args),
-
-    onK: (...args) => _onSS("k", args),
-
-    onS: (...args) => _onSS("s", args),
-
-    get: (...args) => _getter("d", args),
-
-    getR: (...args) => _getter("r", args),
-
-    getK: (...args) => _getter("k", args),
-
-    getS: (...args) => _getter("s", args),
-
-    add: (...args) => _op("add", args),
-
-    set: (...args) => _op("set", args),
-
-    upsert: (...args) => _op("set", args, { merge: true }),
-
-    update: (...args) => _op("update", args),
-
     delete: (...args) => _ref(args).ref.delete()
   }
+
+  const getAPIs = R.compose(
+    R.fromPairs,
+    R.map(([op, flag]) => [
+      `${op}${R.toUpper(flag)}`,
+      R.unapply(_ops[op](flag === "" ? "d" : flag))
+    ]),
+    R.xprod
+  )(["get", "on", "tx"], ["", "k", "s", "r"])
+
+  const writeAPIs = R.compose(
+    R.fromPairs,
+    R.map(op => [
+      op,
+      R.unapply(
+        _ops.write(
+          op === "upsert" ? "set" : op,
+          op === "upsert" ? { merge: true } : null
+        )
+      )
+    ])
+  )(["add", "set", "update", "upsert"])
+
+  return R.mergeAll([getAPIs, APIs, writeAPIs])
 }
