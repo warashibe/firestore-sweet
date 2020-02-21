@@ -1,13 +1,28 @@
 {
-  "name": "npm-es6",
-  "version": "1.0.0",
+  "name": "firestore-sweet",
+  "version": "0.1.0",
   "main": "./lib/index.js",
+  "author": {
+    "name": "Tomoya Nagasawa",
+    "email": "ocrybit@gmail.com",
+    "url": "https://tomo.io/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ocrybit/firestore-sweet.git"
+  },
+  "keywords": [
+    "firestore"
+  ],
+  "license": "MIT",  
   "scripts": {
     "clean": "rimraf lib",
     "build": "cross-env BABEL_ENV=production babel src --out-dir lib",
     "prepublish": "npm run clean && npm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "ramdam": "^1.0.4"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-add-module-exports": "^1.0.0",
