@@ -3,47 +3,49 @@ import R from "ramdam"
 export default _db => {
   const db = _db()
 
-  const _ref = args => {
-    let n = 0
-    const ref = R.addIndex(R.reduce)((acc, arg, i) => {
-      let c = R.cond([
+  const _ref = R.addIndex(R.reduce)(
+    (acc, arg, i) =>
+      R.cond([
+        [R.isString, () => (R.isEven(i) ? acc.collection(arg) : acc.doc(arg))],
+        [R.isNumber, () => acc.limit(arg)],
         [
-          R.isString,
-          () => {
-            return R.isEven(i) ? acc.collection(arg) : acc.doc(arg)
-          }
+          R.isArray,
+          R.cond([
+            [R.equalsLength(3), arg => acc.where(...arg)],
+            [
+              R.both(
+                R.equalsLength(2),
+                R.compose(
+                  R.includes(R.__, [
+                    "startAt",
+                    "startAfter",
+                    "endAt",
+                    "endBefore"
+                  ]),
+                  R.head
+                )
+              ),
+              arg => acc[arg[0]](arg[1])
+            ],
+            [R.T, arg => acc.orderBy(...arg)]
+          ])
         ]
-      ])(args)
-      if (R.isString(arg)) {
-        n++
-        return R.isEven(i) ? acc.collection(arg) : acc.doc(arg)
-      } else if (R.isNumber(arg)) {
-        return acc.limit(arg)
-      } else if (R.isArray(arg)) {
-        if (R.length(arg) == 3) {
-          return acc.where(...arg)
-        } else if (
-          R.length(arg) == 2 &&
-          R.includes(arg[0])(["startAt", "startAfter", "endAt", "endBefore"])
-        ) {
-          return acc[arg[0]](arg[1])
-        } else {
-          return acc.orderBy(...arg.slice(1))
-        }
-      }
-    }, db)(args)
-    return { n, ref }
-  }
+      ])(arg),
+    db
+  )
+
+  const _strings = R.compose(R.length, R.takeWhile(R.isString))
 
   const _get = async args => {
-    const { n, ref } = _ref(args)
+    const n = _strings(args)
+    const ref = _ref(args)
     const ss = await ref.get()
     return { n, ref, ss }
   }
 
   const _write = args => {
     let data = args.shift()
-    const { ref } = _ref(args)
+    const ref = _ref(args)
     return { data, ref }
   }
 
@@ -98,7 +100,8 @@ export default _db => {
 
   const _on = args => {
     const func = args.pop()
-    const { n, ref } = _ref(args)
+    const n = _strings(args)
+    const ref = _ref(args)
     return { func, n, ref }
   }
 
@@ -138,14 +141,15 @@ export default _db => {
           const { data, ref } = _write(args)
           batch.set(ref, data, { merge: true })
         } else if (op === "delete") {
-          const { ref } = _ref(args)
+          const n = _strings(args)
+          const ref = _ref(args)
           batch.delete(ref)
         }
       }
       return batch.commit()
     },
 
-    delete: (...args) => _ref(args).ref.delete()
+    delete: (...args) => _ref(args).delete()
   }
 
   const getAPIs = R.compose(

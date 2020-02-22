@@ -16,6 +16,7 @@ describe("Firestore Sweet", () => {
     for (const id in docs) {
       await db.delete("test", id)
     }
+    return
   })
 
   describe("#initialization", () => {
@@ -169,6 +170,42 @@ describe("Firestore Sweet", () => {
       await db.delete("test", "john")
       const John = await db.get("test", "john")
       assert.equal(John, null)
+    })
+  })
+  describe("#where()", () => {
+    it("should get the right doc with where", async () => {
+      const docs = await db.get("test", ["name", "==", "Alice New"])
+      assert.equal(docs[0].age, 63)
+    })
+  })
+
+  describe("#limit()", () => {
+    it("should limit the number of returning docs", async () => {
+      const docs = await db.get("test", 1)
+      assert.equal(docs.length, 1)
+    })
+  })
+
+  describe("#orderBy()", () => {
+    it("should sort by age", async () => {
+      const docs = await db.get("test", ["age", "desc"])
+      assert.equal(docs[0].age, 63)
+      assert.equal(docs[1].age, 30)
+    })
+  })
+
+  describe("#startAt()", () => {
+    it("should start at the specified age", async () => {
+      const docs = await db.get("test", ["age", "desc"], ["startAt", 50])
+      assert.equal(docs[0].age, 30)
+      assert.equal(docs.length, 1)
+    })
+  })
+  describe("#endAt()", () => {
+    it("should end at the specified age", async () => {
+      const docs = await db.get("test", ["age", "desc"], ["endAt", 50])
+      assert.equal(docs[0].age, 63)
+      assert.equal(docs.length, 1)
     })
   })
 })
