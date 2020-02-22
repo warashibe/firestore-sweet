@@ -21,7 +21,7 @@
     .limit(<span class="hljs-number">10</span>)
     .get()
   ).forEach(<span class="hljs-function">(<span class="hljs-params">ss</span>) =&gt;</span> {
-    batch.set(
+    batch.update(
       ss._ref,
       {
         <span class="hljs-attr">likes</span>: firebase.firestore.FieldValue.increment(<span class="hljs-number">1</span>),
