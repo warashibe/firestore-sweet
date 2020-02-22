@@ -1,12 +1,17 @@
+![alt text](https://ocrybit.github.io/firestore-sweet/img/twitter_cover.png "Firestore Sweet")
+
 # Firestore Sweet
 
 [Cloud Firestore](https://firebase.google.com/docs/firestore) made super easy with sweet syntactic sugar
 
-`firestore-sweet` works with both client-side `firebase` and server-side `firebase-admin`.
+> `firestore-sweet` works with both client-side `firebase` and server-side `firebase-admin`.
+
+## Project Website / Documentation
+[https://ocrybit.github.io/firestore-sweet/](https://ocrybit.github.io/firestore-sweet/)
 
 ## Installation
 
-```
+```bash
 yarn add firestore-sweet
 ```
 
@@ -98,23 +103,19 @@ await db.update({age: 40}, "users", "Bob")
 
 // fs.collection("users").doc("Bob").delete()
 await db.delete("users", "Bob")
-
 ```
 
 ### delete field : `del`
 ```javascript
 // fs.collection("users").doc("Bob").update({age: firebase.firestore.FieldValue.delete()})
 await db.update({age: db.del}, "users", "Bob")
-
 ```
 
 ### increment field : `inc(n)`
 ```javascript
 // fs.collection("users").doc("Bob").update({age: firebase.firestore.FieldValue.increment(3)})
 await db.update({age: db.inc(3)}, "users", "Bob")
-
 ```
-
 
 ### onSnapShot : `on`
 
@@ -124,7 +125,36 @@ const unsubscribe = db.on("users", (docs) => {
     console.log(`${user.name} : ${user.age}`)
   }
 })
+```
 
+### `drop`
+
+This is a unique method only seen in `firestore-sweet` to delete everything in a collection.
+
+Be careful using it since it's powerful and dangerous if misused.
+
+```javascript
+await db.drop("users")
+```
+
+### Bulk write operations with query
+
+With `firestore sweet`, multiple write operations are possible with queries in one method.
+
+This is not something possible with the Firestore APIs. Firestore batch has 500 operations at a time limit, but `firestore sweet` automatically bypasses the limit by dividing the operations into chunks of 500 and parallelly executes those. It can execute 50,000 operations in a few seconds this way, but watch out for your bill.
+
+> `add` and `upsert` don't make sense with this operation. `add` doesn't do anything and `upsert` works the same as `update` in this context.
+
+```javascript
+await db.update({age: 30}, "users", ["age", ">", 30])
+```
+
+```javascript
+await db.set({name: "John", age: 30}, "users", ["age", ">", 30])
+```
+
+```javascript
+await db.delete("users", ["age", ">", 30])
 ```
 
 ### runTransaction : `tx`
@@ -133,7 +163,6 @@ const unsubscribe = db.on("users", (docs) => {
 await db.tx("users", "Bob", ({ref, t, data}) => {
   t.update(ref, {age: data.age + 10})
 })
-
 ```
 
 ### batch : `batch`
@@ -148,9 +177,9 @@ await db.batch([
 
 ### Getting document ids and snapshots as return values
 
-You can also get document `id` and `snapshot` with the actual data by adding `K`, `S` or `R` to the method names.
+You can also get document `id` and `snapshot` with the actual data by adding `K` or `S` to the method names.
 
-`get` => `getK` `getS` `getR` / `tx`  => `txK` `txS` `txR` / `on`  => `onK` `onS` `onR`
+> `get` => `getK` `getS` / `tx`  => `txK` `txS` / `on`  => `onK` `onS`
 
 ```javascript
 // getK returns document id and data
@@ -171,15 +200,15 @@ for(const {id, ss , data} of await db.getS("users")){
 	console.log(`${user.name} : ${user.age}`)
 }
 
-/* "txK", "txS", "txR" and "onK", "onS", "onR"
-   return the same data as "getK", "getS", "getR" respectively */
+/* "txK", "txS" and "onK", "onS"
+   return the same data as "getK", "getS" respectively */
 ```
 
 ## Test
 You need service-account credentials for a Firebase project at `/test/.service-account.json` to run the tests.
 
-Use a disposable project if you are to run the tests since the tests manipulate and delete actual data from your Firestore.
+> Use a disposable project if you are to run the tests since the tests manipulate and delete actual data from your Firestore.
 
-```
+```bash
 yarn run test
 ```
