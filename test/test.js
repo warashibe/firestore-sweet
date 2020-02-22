@@ -9,12 +9,9 @@ try {
 } catch (e) {}
 
 const db = sweet(admin.firestore)
-describe("Regular Methods", () => {
+xdescribe("Regular Methods", () => {
   before(async () => {
-    const docs = await db.getK("test")
-    for (const id in docs) {
-      await db.delete("test", id)
-    }
+    const docs = await db.drop("test")
     return
   })
 
@@ -212,11 +209,7 @@ describe("Regular Methods", () => {
 describe("Extra Methods", function() {
   this.timeout(0)
   before(async () => {
-    const docs = await db.getK("test")
-    for (const id in docs) {
-      await db.delete("test", id)
-    }
-
+    const docs = await db.drop("test")
     await db.batch([
       ["set", { name: "Bob", age: 10 }, "test", "bob"],
       ["set", { name: "Alice", age: 20 }, "test", "alice"],
@@ -257,6 +250,22 @@ describe("Extra Methods", function() {
 
       const users = await db.get("test")
       assert.equal(users.length, 2)
+    })
+    // be careful running this test as it might exhaust your daily quota
+    xit("should handle more than 500 bulk writes", async () => {
+      let writes = []
+      let writes2 = []
+      for (let i = 0; i < 500; i++) {
+        writes.push(["set", { i: i, age: 3 }, "test", `user-${i}`])
+        writes2.push(["set", { i: i, age: 3 }, "test", `user-${i + 500}`])
+      }
+      await db.batch(writes)
+      await db.batch(writes2)
+      let users = await db.get("test", ["age", "==", 3])
+      assert.equal(users.length, 1000)
+      await db.delete("test", ["age", "==", 3])
+      let users2 = await db.get("test", ["age", "==", 3])
+      assert.equal(users2.length, 0)
     })
   })
 })

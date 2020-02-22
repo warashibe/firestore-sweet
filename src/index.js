@@ -116,21 +116,33 @@ export default _db => {
 
   const _ops = R.map(R.curry, {
     write: async (op, opt, args) => {
-      const { data, ref, n, query } =
-        op === "delete" ? _write_without_data(args) : _write(args)
-      if (query) {
+      const { data, ref, n, query } = R.includes(op)(["drop", "delete"])
+        ? _write_without_data(args)
+        : _write(args)
+      if (query || op === "drop") {
         const docs = _data.s({ n: n, ss: await ref.get() })
-        const batch = db.batch()
-        for (let {
-          ss: { _ref: ref }
-        } of docs) {
-          if (R.includes(op)(["set", "update"])) {
-            R.isNotNil(opt) ? batch[op](ref, data, opt) : batch[op](ref, data)
-          } else if (op === "delete") {
-            batch.delete(ref)
-          }
+        if (R.isEmpty(docs)) {
+          return
         }
-        return batch.commit()
+        const prs = R.compose(
+          R.map(_docs => {
+            const batch = db.batch()
+            for (let {
+              ss: { _ref: ref }
+            } of _docs) {
+              if (R.includes(op)(["set", "update"])) {
+                R.isNotNil(opt)
+                  ? batch[op](ref, data, opt)
+                  : batch[op](ref, data)
+              } else if (R.includes(op)(["drop", "delete"])) {
+                batch.delete(ref)
+              }
+            }
+            return batch.commit()
+          }),
+          R.aperture(Math.min(docs.length, 500))
+        )(docs)
+        return Promise.all(prs)
       } else {
         return op === "delete"
           ? ref[op]()
@@ -175,9 +187,7 @@ export default _db => {
         }
       }
       return batch.commit()
-    },
-
-    delete: (...args) => _ref(args).delete()
+    }
   }
 
   const getAPIs = R.compose(
@@ -200,7 +210,7 @@ export default _db => {
         )
       )
     ])
-  )(["add", "set", "update", "upsert", "delete"])
+  )(["add", "set", "update", "upsert", "delete", "drop"])
 
   return R.mergeAll([getAPIs, APIs, writeAPIs])
 }
