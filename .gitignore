@@ -1,3 +1,6 @@
+# credentials
+test/.service-account.json
+
 # Logs
 logs
 *.log

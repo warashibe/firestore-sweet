@@ -174,3 +174,12 @@ for(const {id, ss , data} of await db.getS("users")){
 /* "txK", "txS", "txR" and "onK", "onS", "onR"
    return the same data as "getK", "getS", "getR" respectively */
 ```
+
+## Test
+You need service-account credentials for a Firebase project at `/test/.service-account.json` to run the tests.
+
+Use a disposable project if you are to run the tests since the tests manipulate and delete actual data from your Firestore.
+
+```
+yarn run test
+```

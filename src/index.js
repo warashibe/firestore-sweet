@@ -6,6 +6,14 @@ export default _db => {
   const _ref = args => {
     let n = 0
     const ref = R.addIndex(R.reduce)((acc, arg, i) => {
+      let c = R.cond([
+        [
+          R.isString,
+          () => {
+            return R.isEven(i) ? acc.collection(arg) : acc.doc(arg)
+          }
+        ]
+      ])(args)
       if (R.isString(arg)) {
         n++
         return R.isEven(i) ? acc.collection(arg) : acc.doc(arg)
