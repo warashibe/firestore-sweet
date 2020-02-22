@@ -34,7 +34,10 @@ export default _db => {
     db
   )
 
-  const _strings = R.compose(R.length, R.takeWhile(R.isString))
+  const _strings = R.compose(
+    R.length,
+    R.takeWhile(R.isString)
+  )
 
   const _get = async args => {
     const n = _strings(args)
@@ -43,10 +46,16 @@ export default _db => {
     return { n, ref, ss }
   }
 
+  const _write_without_data = args => {
+    const n = _strings(args)
+    const ref = _ref(args)
+    return { ref, n, query: n !== args.length }
+  }
+
   const _write = args => {
     let data = args.shift()
-    const ref = _ref(args)
-    return { data, ref }
+    const { ref, n, query } = _write_without_data(args)
+    return { data, ref, n, query }
   }
 
   const _one = ss => (ss.exists ? ss.data() : null)
@@ -106,9 +115,29 @@ export default _db => {
   }
 
   const _ops = R.map(R.curry, {
-    write: (op, opt, args) => {
-      const { data, ref } = _write(args)
-      return R.isNil(opt) ? ref[op](data) : ref[op](data, opt)
+    write: async (op, opt, args) => {
+      const { data, ref, n, query } =
+        op === "delete" ? _write_without_data(args) : _write(args)
+      if (query) {
+        const docs = _data.s({ n: n, ss: await ref.get() })
+        const batch = db.batch()
+        for (let {
+          ss: { _ref: ref }
+        } of docs) {
+          if (R.includes(op)(["set", "update"])) {
+            R.isNotNil(opt) ? batch[op](ref, data, opt) : batch[op](ref, data)
+          } else if (op === "delete") {
+            batch.delete(ref)
+          }
+        }
+        return batch.commit()
+      } else {
+        return op === "delete"
+          ? ref[op]()
+          : R.isNil(opt)
+            ? ref[op](data)
+            : ref[op](data, opt)
+      }
     },
     get: async (getter, args) => _data[getter](await _get(args)),
     on: async (getter, args) => {
@@ -130,7 +159,7 @@ export default _db => {
 
     ts: _db.Timestamp,
 
-    batch: (ops, func) => {
+    batch: ops => {
       const batch = db.batch()
       for (let args of ops) {
         const op = args.shift()
@@ -141,7 +170,6 @@ export default _db => {
           const { data, ref } = _write(args)
           batch.set(ref, data, { merge: true })
         } else if (op === "delete") {
-          const n = _strings(args)
           const ref = _ref(args)
           batch.delete(ref)
         }
@@ -172,7 +200,7 @@ export default _db => {
         )
       )
     ])
-  )(["add", "set", "update", "upsert"])
+  )(["add", "set", "update", "upsert", "delete"])
 
   return R.mergeAll([getAPIs, APIs, writeAPIs])
 }

@@ -9,8 +9,7 @@ try {
 } catch (e) {}
 
 const db = sweet(admin.firestore)
-
-describe("Firestore Sweet", () => {
+describe("Regular Methods", () => {
   before(async () => {
     const docs = await db.getK("test")
     for (const id in docs) {
@@ -206,6 +205,58 @@ describe("Firestore Sweet", () => {
       const docs = await db.get("test", ["age", "desc"], ["endAt", 50])
       assert.equal(docs[0].age, 63)
       assert.equal(docs.length, 1)
+    })
+  })
+})
+
+describe("Extra Methods", function() {
+  this.timeout(0)
+  before(async () => {
+    const docs = await db.getK("test")
+    for (const id in docs) {
+      await db.delete("test", id)
+    }
+
+    await db.batch([
+      ["set", { name: "Bob", age: 10 }, "test", "bob"],
+      ["set", { name: "Alice", age: 20 }, "test", "alice"],
+      ["set", { name: "John", age: 30 }, "test", "john"]
+    ])
+    return
+  })
+
+  describe("#initialization", () => {
+    it("should update multiple docs with query", async () => {
+      await db.update({ age: 5 }, "test", ["age", ">", 5])
+
+      const John = await db.get("test", "john")
+      assert.equal(John.age, 5)
+
+      const Bob = await db.get("test", "bob")
+      assert.equal(Bob.age, 5)
+
+      const Alice = await db.get("test", "alice")
+      assert.equal(Alice.age, 5)
+
+      await db.set({ age: 7 }, "test", ["name", "==", "Bob"])
+      const Bob2 = await db.get("test", "bob")
+      assert.equal(Bob2.name, undefined)
+
+      await db.update({ age: 88 }, "test", ["name", "==", "Alice"])
+      const Alice2 = await db.get("test", "alice")
+      assert.equal(Alice2.age, 88)
+
+      await db.upsert({ age: 50 }, "test", ["name", "==", "Alice"])
+      const Alice3 = await db.get("test", "alice")
+      assert.equal(Alice3.age, 50)
+      assert.equal(Alice3.name, "Alice")
+
+      await db.delete("test", ["name", "==", "Alice"])
+      const Alice4 = await db.get("test", "alice")
+      assert.equal(Alice4, null)
+
+      const users = await db.get("test")
+      assert.equal(users.length, 2)
     })
   })
 })
