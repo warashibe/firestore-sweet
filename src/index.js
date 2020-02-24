@@ -130,7 +130,7 @@ export default _db => {
             for (let {
               ss: { _ref: ref }
             } of _docs) {
-              if (R.includes(op)(["set", "update"])) {
+              if (R.includes(op)(["add", "set", "update"])) {
                 R.isNotNil(opt)
                   ? batch[op](ref, data, opt)
                   : batch[op](ref, data)
@@ -175,7 +175,7 @@ export default _db => {
       const batch = db.batch()
       for (let args of ops) {
         const op = args.shift()
-        if (R.includes(op)(["set", "update"])) {
+        if (R.includes(op)(["add", "set", "update"])) {
           const { data, ref } = _write(args)
           batch[op](ref, data)
         } else if (op === "upsert") {
@@ -212,5 +212,7 @@ export default _db => {
     ])
   )(["add", "set", "update", "upsert", "delete", "drop"])
 
-  return R.mergeAll([getAPIs, APIs, writeAPIs])
+  const ref = R.unapply(_ref)
+
+  return R.mergeAll([getAPIs, APIs, writeAPIs, { ref }])
 }

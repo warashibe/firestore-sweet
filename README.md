@@ -137,6 +137,14 @@ Be careful using it since it's powerful and dangerous if misused.
 await db.drop("users")
 ```
 
+### `ref`
+
+Use `ref` to simply get a native ref object from the Firestore SDK.
+
+```javascript
+await db.ref("users", "Bob")
+```
+
 ### Bulk write operations with query
 
 With `firestore sweet`, multiple write operations are possible with queries in one method.
