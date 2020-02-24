@@ -214,5 +214,5 @@ export default _db => {
 
   const ref = R.unapply(_ref)
 
-  return R.mergeAll([getAPIs, APIs, writeAPIs, { ref }])
+  return R.mergeAll([getAPIs, APIs, writeAPIs, { ref, firestore: db }])
 }
