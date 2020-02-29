@@ -3,13 +3,15 @@
     "development": {
       "presets": ["env"],
       "plugins": [
-        "add-module-exports"
+        "add-module-exports",
+	"transform-runtime"
       ]
     },
     "production": {
       "presets": ["env", "minify"],
       "plugins": [
-        "add-module-exports"
+        "add-module-exports",
+	"transform-runtime"	
       ]
     }
   }

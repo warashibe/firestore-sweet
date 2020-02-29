@@ -158,9 +158,13 @@ export default _db => {
     },
     tx: async (getter, args) => {
       const { func, n, ref } = _on(args)
-      return await db.runTransaction(async t =>
-        func({ t, data: _data[getter]({ n, ss: await t.get(ref) }), ref })
-      )
+      return await db.runTransaction(async t => {
+        return func({
+          t,
+          data: _data[getter]({ n, ss: await t.get(ref) }),
+          ref
+        })
+      })
     }
   })
 
