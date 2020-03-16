@@ -140,7 +140,7 @@ export default _db => {
             }
             return batch.commit()
           }),
-          R.aperture(Math.min(docs.length, 500))
+          R.splitEvery(Math.min(docs.length, 500))
         )(docs)
         return Promise.all(prs)
       } else {
