@@ -1,4 +1,4 @@
-![alt text](https://ocrybit.github.io/firestore-sweet/img/twitter_cover.png "Firestore Sweet")
+![alt text](https://warashibe.github.io/firestore-sweet/img/twitter_cover.png "Firestore Sweet")
 
 # Firestore Sweet
 
@@ -7,7 +7,7 @@
 > `firestore-sweet` works with both client-side `firebase` and server-side `firebase-admin`.
 
 ## Project Website / Documentation
-[https://ocrybit.github.io/firestore-sweet/](https://ocrybit.github.io/firestore-sweet/)
+[https://warashibe.github.io/firestore-sweet/](https://warashibe.github.io/firestore-sweet/)
 
 ## Installation
 
