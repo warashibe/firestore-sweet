@@ -3042,14 +3042,14 @@ pumpify@^2.0.0:
     pump "^3.0.0"
 
 ramda-adjunct@^2.25.0:
-  version "2.25.0"
-  resolved "https://registry.yarnpkg.com/ramda-adjunct/-/ramda-adjunct-2.25.0.tgz#bce71ac6de57d246c3947b2d79c8bc8e6f2ce27d"
-  integrity sha512-N4e0dUgoCMjiGmElZYr3sbwg75nPVIhu10jXot3nY30okFd4+4HWI5UF2+l5xsu8ygSn4Ez3LwakcK1ejJWVHw==
+  version "2.27.0"
+  resolved "https://registry.yarnpkg.com/ramda-adjunct/-/ramda-adjunct-2.27.0.tgz#674b62acd3545d1ae8395dbe6f160bc87611937d"
+  integrity sha512-Z0+z+nEcbAguWSqlBJXLh3g4d2H82s0koDTiBm4WHkv02eXP82otRWRAqbHfoXQbUtb89XKxMz1NJKsQmC2yGA==
 
 ramda-extension@^0.10.1:
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/ramda-extension/-/ramda-extension-0.10.1.tgz#22059b3a807be4b0617d0b032a81bfc8a542eee3"
-  integrity sha512-ZhDmiYfLDm+fPA1S1IMeVY94isL6SdvVINVoGcFCm1ozRfHXjhKyx3F1htmFyV5hksyoI97mSqgcwab4Q5CBPQ==
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/ramda-extension/-/ramda-extension-0.10.3.tgz#27026970889730c2c3d214e4d3138002d9553eb2"
+  integrity sha512-6B7tlSL6C7TR/hspLLibmowPEJRkX5pgAN3Mb2DhwFqQIT+KSOtx3fGNdJh3MyViLRil67hFlkeZHOMwBKd+yw==
 
 ramda@^0.27.0:
   version "0.27.0"
@@ -3057,9 +3057,9 @@ ramda@^0.27.0:
   integrity sha512-pVzZdDpWwWqEVVLshWUHjNwuVP7SfcmPraYuqocJp1yo2U1R7P+5QAfDhdItkuoGqIBnBYrtPp7rEPqDn9HlZA==
 
 ramdam@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/ramdam/-/ramdam-1.0.4.tgz#508f3beee81ba1c977ae97bc4bf2fc553fef0e96"
-  integrity sha512-m5mVxN0A4bmCHKX/gFEHTD1gc/5qU62MfqDssXeU3SqHKLQPklW4w3a524siUlJHfcugeDXZvr/FqoejkCwXtA==
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/ramdam/-/ramdam-1.6.4.tgz#c1faeab645f644c0847f3c39fe78e1e3e1be9656"
+  integrity sha512-qICsFGrTxJsDDyTsO+G8pUUVmdL+SAxZhMYS5lOoD62Ymxb8FBku9LxYC3gKte/PEVHGtMugDm5hgN7A5g+uXA==
   dependencies:
     ramda "^0.27.0"
     ramda-adjunct "^2.25.0"

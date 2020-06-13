@@ -1,42 +1,67 @@
-import R from "ramdam"
+import {
+  splitEvery,
+  isNil,
+  xprod,
+  xNil,
+  toUpper,
+  addIndex,
+  reduce,
+  isEven,
+  isString,
+  isNumber,
+  isArray,
+  cond,
+  equalsLength,
+  both,
+  head,
+  compose,
+  includes,
+  __,
+  T,
+  length,
+  takeWith,
+  isOdd,
+  takeWhile,
+  map,
+  curry,
+  isEmpty,
+  fromPairs,
+  mergeAll,
+  unapply
+} from "ramdam"
 
 export default _db => {
   const db = _db()
 
-  const _ref = R.addIndex(R.reduce)(
+  const _ref = addIndex(reduce)(
     (acc, arg, i) =>
-      R.cond([
-        [R.isString, () => (R.isEven(i) ? acc.collection(arg) : acc.doc(arg))],
-        [R.isNumber, () => acc.limit(arg)],
+      cond([
+        [isString, () => (isEven(i) ? acc.collection(arg) : acc.doc(arg))],
+        [isNumber, () => acc.limit(arg)],
         [
-          R.isArray,
-          R.cond([
-            [R.equalsLength(3), arg => acc.where(...arg)],
+          isArray,
+          cond([
+            [equalsLength(3), arg => acc.where(...arg)],
             [
-              R.both(
-                R.equalsLength(2),
-                R.compose(
-                  R.includes(R.__, [
-                    "startAt",
-                    "startAfter",
-                    "endAt",
-                    "endBefore"
-                  ]),
-                  R.head
+              both(
+                equalsLength(2),
+                compose(
+                  includes(__, ["startAt", "startAfter", "endAt", "endBefore"]),
+                  head
                 )
               ),
               arg => acc[arg[0]](arg[1])
             ],
-            [R.T, arg => acc.orderBy(...arg)]
+            [T, arg => acc.orderBy(...arg)]
           ])
         ]
       ])(arg),
     db
   )
 
-  const _strings = R.compose(
-    R.length,
-    R.takeWhile(R.isString)
+  const _strings = compose(
+    length,
+    takeWhile(isString)
   )
 
   const _get = async args => {
@@ -62,7 +87,7 @@ export default _db => {
 
   const _data = {
     d: ({ ss, n }) => {
-      if (R.isOdd(n)) {
+      if (isOdd(n)) {
         let docs = []
         ss.forEach(doc => {
           docs.push(doc.data())
@@ -73,7 +98,7 @@ export default _db => {
       }
     },
     r: ({ ss, n }) => {
-      if (R.isOdd(n)) {
+      if (isOdd(n)) {
         let docs = []
         ss.forEach(doc => {
           docs.push(doc)
@@ -84,7 +109,7 @@ export default _db => {
       }
     },
     s: ({ ss, n }) => {
-      if (R.isOdd(n)) {
+      if (isOdd(n)) {
         let docs = []
         ss.forEach(doc => {
           docs.push({ id: doc.id, data: doc.data(), ss: doc })
@@ -95,7 +120,7 @@ export default _db => {
       }
     },
     k: ({ ss, n }) => {
-      if (R.isOdd(n)) {
+      if (isOdd(n)) {
         let docs = {}
         ss.forEach(doc => {
           docs[doc.id] = doc.data()
@@ -114,39 +139,37 @@ export default _db => {
     return { func, n, ref }
   }
 
-  const _ops = R.map(R.curry, {
+  const _ops = map(curry, {
     write: async (op, opt, args) => {
-      const { data, ref, n, query } = R.includes(op)(["drop", "delete"])
+      const { data, ref, n, query } = includes(op)(["drop", "delete"])
         ? _write_without_data(args)
         : _write(args)
       if (query || op === "drop") {
         const docs = _data.s({ n: n, ss: await ref.get() })
-        if (R.isEmpty(docs)) {
+        if (isEmpty(docs)) {
           return
         }
-        const prs = R.compose(
-          R.map(_docs => {
+        const prs = compose(
+          map(_docs => {
             const batch = db.batch()
             for (let {
               ss: { _ref: ref }
             } of _docs) {
-              if (R.includes(op)(["add", "set", "update"])) {
-                R.isNotNil(opt)
-                  ? batch[op](ref, data, opt)
-                  : batch[op](ref, data)
-              } else if (R.includes(op)(["drop", "delete"])) {
+              if (includes(op)(["add", "set", "update"])) {
+                xNil(opt) ? batch[op](ref, data, opt) : batch[op](ref, data)
+              } else if (includes(op)(["drop", "delete"])) {
                 batch.delete(ref)
               }
             }
             return batch.commit()
           }),
-          R.splitEvery(Math.min(docs.length, 500))
+          splitEvery(Math.min(docs.length, 500))
         )(docs)
         return Promise.all(prs)
       } else {
         return op === "delete"
           ? ref[op]()
-          : R.isNil(opt)
+          : isNil(opt)
             ? ref[op](data)
             : ref[op](data, opt)
       }
@@ -179,7 +202,7 @@ export default _db => {
       const batch = db.batch()
       for (let args of ops) {
         const op = args.shift()
-        if (R.includes(op)(["add", "set", "update"])) {
+        if (includes(op)(["add", "set", "update"])) {
           const { data, ref } = _write(args)
           batch[op](ref, data)
         } else if (op === "upsert") {
@@ -194,20 +217,20 @@ export default _db => {
     }
   }
 
-  const getAPIs = R.compose(
-    R.fromPairs,
-    R.map(([op, flag]) => [
-      `${op}${R.toUpper(flag)}`,
-      R.unapply(_ops[op](flag === "" ? "d" : flag))
+  const getAPIs = compose(
+    fromPairs,
+    map(([op, flag]) => [
+      `${op}${toUpper(flag)}`,
+      unapply(_ops[op](flag === "" ? "d" : flag))
     ]),
-    R.xprod
+    xprod
   )(["get", "on", "tx"], ["", "k", "s", "r"])
 
-  const writeAPIs = R.compose(
-    R.fromPairs,
-    R.map(op => [
+  const writeAPIs = compose(
+    fromPairs,
+    map(op => [
       op,
-      R.unapply(
+      unapply(
         _ops.write(
           op === "upsert" ? "set" : op,
           op === "upsert" ? { merge: true } : null
@@ -216,7 +239,7 @@ export default _db => {
     ])
   )(["add", "set", "update", "upsert", "delete", "drop"])
 
-  const ref = R.unapply(_ref)
+  const ref = unapply(_ref)
 
-  return R.mergeAll([getAPIs, APIs, writeAPIs, { ref, firestore: db }])
+  return mergeAll([getAPIs, APIs, writeAPIs, { ref, firestore: db }])
 }
