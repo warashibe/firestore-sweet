@@ -1,50 +1,47 @@
 import {
-  splitEvery,
   isNil,
-  xprod,
-  xNil,
-  toUpper,
-  addIndex,
-  reduce,
-  isEven,
-  isString,
-  isNumber,
-  isArray,
-  cond,
-  equalsLength,
-  both,
+  length,
+  takeWhile,
+  T,
   head,
+  both,
   compose,
   includes,
   __,
-  T,
-  length,
-  takeWith,
-  isOdd,
-  takeWhile,
+  is,
+  addIndex,
+  reduce,
+  cond,
+  propEq,
   map,
+  unapply,
+  mergeAll,
   curry,
   isEmpty,
+  splitEvery,
   fromPairs,
-  mergeAll,
-  unapply
-} from "ramdam"
+  xprod,
+  toUpper,
+  complement
+} from "ramda"
+
+const isOdd = v => v % 2 === 1
+const isEven = complement(isOdd)
 
 export default _db => {
   const db = _db()
-
   const _ref = addIndex(reduce)(
     (acc, arg, i) =>
       cond([
-        [isString, () => (isEven(i) ? acc.collection(arg) : acc.doc(arg))],
-        [isNumber, () => acc.limit(arg)],
+        [is(String), () => (isEven(i) ? acc.collection(arg) : acc.doc(arg))],
+        [is(Number), () => acc.limit(arg)],
         [
-          isArray,
+          is(Array),
           cond([
-            [equalsLength(3), arg => acc.where(...arg)],
+            [propEq("length", 3), arg => acc.where(...arg)],
             [
               both(
-                equalsLength(2),
+                propEq("length", 2),
                 compose(
                   includes(__, ["startAt", "startAfter", "endAt", "endBefore"]),
                   head
@@ -61,7 +58,7 @@ export default _db => {
 
   const _strings = compose(
     length,
-    takeWhile(isString)
+    takeWhile(is(String))
   )
 
   const _get = async args => {
@@ -156,7 +153,9 @@ export default _db => {
               ss: { _ref: ref }
             } of _docs) {
               if (includes(op)(["add", "set", "update"])) {
-                xNil(opt) ? batch[op](ref, data, opt) : batch[op](ref, data)
+                complement(isNil)(opt)
+                  ? batch[op](ref, data, opt)
+                  : batch[op](ref, data)
               } else if (includes(op)(["drop", "delete"])) {
                 batch.delete(ref)
               }

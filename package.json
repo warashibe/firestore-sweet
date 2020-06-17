@@ -1,6 +1,6 @@
 {
   "name": "firestore-sweet",
-  "version": "0.4.5",
+  "version": "0.4.8",
   "main": "./lib/index.js",
   "author": {
     "name": "Tomoya Nagasawa",
@@ -24,7 +24,7 @@
     "prepublish": "npm run clean && npm run build"
   },
   "dependencies": {
-    "ramdam": "^1.0.4"
+    "ramda": "^0.27.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

@@ -1,11 +1,8 @@
 import sweet from "../src/index"
 import admin from "firebase-admin"
-import serviceAccount from "./.service-account.json"
 import assert from "assert"
 try {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  })
+  admin.initializeApp({})
 } catch (e) {}
 
 const db = sweet(admin.firestore)
