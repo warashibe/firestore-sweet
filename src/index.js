@@ -191,7 +191,7 @@ export default _db => {
     inc: _db.FieldValue.increment,
     del: _db.FieldValue.delete(),
     ts: _db.FieldValue.serverTimestamp(),
-    union: db.FieldValue.arrayUnion,
+    union: _db.FieldValue.arrayUnion,
     remove: _db.FieldValue.arrayRemove,
 
     increment: _db.FieldValue.increment,
