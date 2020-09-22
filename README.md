@@ -106,15 +106,38 @@ await db.delete("users", "Bob")
 ```
 
 ### delete field : `del`
+
 ```javascript
 // fs.collection("users").doc("Bob").update({age: firebase.firestore.FieldValue.delete()})
 await db.update({age: db.del}, "users", "Bob")
 ```
 
 ### increment field : `inc(n)`
+
 ```javascript
 // fs.collection("users").doc("Bob").update({age: firebase.firestore.FieldValue.increment(3)})
 await db.update({age: db.inc(3)}, "users", "Bob")
+```
+
+### serverTimestamp : `ts`
+
+```javascript
+// fs.collection("users").doc("Bob").update({date: firebase.firestore.FieldValue.serverTimestamp()})
+await db.update({date: db.ts}, "users", "Bob")
+```
+
+### arrayUnion : `union`
+
+```javascript
+// fs.collection("users").doc("Bob").update({favorites: firebase.firestore.FieldValue.arrayUnion("tomato")})
+await db.update({favorites: db.union("tomato")}, "users", "Bob")
+```
+
+### arrayRemove : `remove`
+
+```javascript
+// fs.collection("users").doc("Bob").update({favorites: firebase.firestore.FieldValue.arrayRemove("tomato")})
+await db.update({favorites: db.remove("tomato")}, "users", "Bob")
 ```
 
 ### onSnapShot : `on`

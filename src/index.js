@@ -56,10 +56,7 @@ export default _db => {
     db
   )
 
-  const _strings = compose(
-    length,
-    takeWhile(is(String))
-  )
+  const _strings = compose(length, takeWhile(is(String)))
 
   const _get = async args => {
     const n = _strings(args)
@@ -169,8 +166,8 @@ export default _db => {
         return op === "delete"
           ? ref[op]()
           : isNil(opt)
-            ? ref[op](data)
-            : ref[op](data, opt)
+          ? ref[op](data)
+          : ref[op](data, opt)
       }
     },
     get: async (getter, args) => _data[getter](await _get(args)),
@@ -192,10 +189,16 @@ export default _db => {
 
   const APIs = {
     inc: _db.FieldValue.increment,
-
     del: _db.FieldValue.delete(),
+    ts: _db.FieldValue.serverTimestamp(),
+    union: db.FieldValue.arrayUnion,
+    remove: _db.FieldValue.arrayRemove,
 
-    ts: _db.Timestamp,
+    increment: _db.FieldValue.increment,
+    delete: _db.FieldValue.delete,
+    serverTimestamp: _db.FieldValue.serverTimestamp,
+    arrayUnion: _db.FieldValue.arrayUnion,
+    arrayRemove: _db.FieldValue.arrayRemove,
 
     batch: ops => {
       const batch = db.batch()
